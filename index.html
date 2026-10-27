@@ -1,0 +1,545 @@
+<title>shaze · визитка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Caveat:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a desk. One physical business card in the middle (tilts, flips), project stickers you can drag around, a light cord for the theme, a "break the site" button, a tiny bot in the corner */
+:root{
+  --desk:#e6e9e2; --grid:#d5dad1; --card:#fbfcf8; --ink:#17201c; --mut:#5c6661; --line:#cfd5cc;
+  --acc:#1d5bc4; --good:#2f8a4e; --warm:#e2a21b; --pink:#e46f8f; --mint:#7cc9a7;
+  --display:"Dela Gothic One","Arial Black",system-ui,sans-serif;
+  --body:"Golos Text",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --hand:"Caveat","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#121614; --grid:#252e29; --card:#1d2320; --ink:#e9ede8; --mut:#9aa49e; --line:#2e3632;
+  --acc:#77a3f5; --good:#5cc07c; --warm:#e8b13a; --pink:#ee8aa6; --mint:#5fb08d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#121614; --grid:#252e29; --card:#1d2320; --ink:#e9ede8; --mut:#9aa49e; --line:#2e3632;
+  --acc:#77a3f5; --good:#5cc07c; --warm:#e8b13a; --pink:#ee8aa6; --mint:#5fb08d; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;position:relative;color:var(--ink);font:400 16px/1.55 var(--body);overflow-x:hidden;
+  background-color:var(--desk);
+  transition:background-color .4s}
+#net{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.w{position:relative;z-index:1;max-width:820px;margin:0 auto;padding-inline:16px;padding-block:28px 120px;display:flex;flex-direction:column;align-items:center;gap:44px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+button{font:inherit;color:inherit}
+
+/* top bar */
+.top{width:100%;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;font:400 12px var(--mono);color:var(--mut)}
+.saved{border:1px dashed var(--line);border-radius:6px;padding:6px 10px;background:color-mix(in srgb,var(--card) 70%,transparent);font-variant-numeric:tabular-nums}
+.saved b{color:var(--good);font-weight:600}
+.breakbtn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:6px 10px;cursor:pointer;font:400 12px var(--mono)}
+.breakbtn:hover{border-color:var(--pink);color:var(--pink)}
+
+/* light cord */
+.cord{position:fixed;top:0;right:28px;z-index:5;display:flex;flex-direction:column;align-items:center;cursor:grab;touch-action:none;user-select:none}
+.cord .str{width:2px;height:70px;background:var(--mut);transition:height .25s cubic-bezier(.3,1.6,.5,1)}
+.cord .knob{width:16px;height:22px;border-radius:5px 5px 8px 8px;background:var(--warm);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.cord.pull .str{height:110px}
+.cord small{font:400 10px var(--mono);color:var(--mut);margin-top:4px;opacity:.8}
+
+/* business card */
+.scene{perspective:1100px;width:min(440px,100%)}
+.card{position:relative;width:100%;aspect-ratio:1.75/1;max-width:100%;cursor:pointer}
+
+.inner{position:absolute;inset:0;will-change:transform;transform:perspective(1000px);transition:transform .45s cubic-bezier(.3,1.4,.5,1)}
+.inner.hov{transition:transform .1s linear}
+.inner.flipping{transition:none}
+.face{position:absolute;inset:0;contain:paint;background:var(--card);border-radius:14px;border:1px solid var(--line);box-shadow:0 30px 50px -28px rgba(0,0,0,.45),0 2px 0 var(--line);padding:clamp(16px,5vw,26px);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.back{display:none}
+
+.card.flipped .front{display:none}
+.card.flipped .back{display:flex}
+.glare{position:absolute;left:-50%;top:-50%;width:100%;height:100%;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.28),transparent 60%);will-change:transform}
+.name{font:400 clamp(40px,12vw,64px)/.95 var(--display);letter-spacing:-.02em;display:flex}
+.name span{display:inline-block;transition:transform .25s cubic-bezier(.3,1.8,.5,1)}
+.name span:hover{transform:translateY(-8px) rotate(-6deg);color:var(--acc)}
+.role{font:500 clamp(13px,3.6vw,15px) var(--body);color:var(--mut)}
+.role b{color:var(--ink);font-weight:600}
+.tline{font:400 clamp(11px,3.1vw,13px) var(--mono);color:var(--acc);min-height:1.5em}
+.tline:after{content:"▍";animation:blink 1s steps(1) infinite;color:var(--ink)}
+@keyframes blink{50%{opacity:0}}
+.chipline{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.chip{width:46px;height:36px;border-radius:7px;flex:none;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#f3d27a 0%,#c9962e 45%,#f6dc8e 60%,#b98522 100%);box-shadow:inset 0 0 0 1px rgba(90,60,10,.45)}
+.chip i{position:absolute;background:rgba(90,60,10,.5)}
+.chip i:nth-child(1){left:0;right:0;top:33%;height:1px}.chip i:nth-child(2){left:0;right:0;top:66%;height:1px}
+.chip i:nth-child(3){top:0;bottom:0;left:34%;width:1px}.chip i:nth-child(4){top:0;bottom:0;left:66%;width:1px}
+.chip i:nth-child(5){left:34%;right:34%;top:33%;bottom:33%;background:linear-gradient(135deg,#f6dc8e,#d1a23c);border:1px solid rgba(90,60,10,.5)}
+.nfc{width:22px;height:22px;flex:none;color:var(--mut)}
+.hintf{font:400 11px var(--mono);color:var(--mut)}
+.back h3{margin:0;font:400 18px var(--display)}
+.back ul{margin:0;padding:0;list-style:none;font-size:clamp(12px,3.4vw,14px);display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.back li:before{content:"→ ";color:var(--acc);font-family:var(--mono)}
+.tg{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tg a{font:600 15px var(--mono);color:var(--acc);text-decoration:none}
+.tg small{font:400 11px var(--mono);color:var(--mut)}
+.under{font:400 12px var(--mono);color:var(--mut);text-align:center;margin-top:-26px}
+
+/* skills: wobbling tags */
+.tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:640px}
+.tag{font:500 14px var(--body);padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:var(--card);cursor:default;transition:transform .2s}
+.tag:hover{animation:wob .5s}
+@keyframes wob{25%{transform:rotate(-6deg) scale(1.08)}50%{transform:rotate(5deg) scale(1.08)}75%{transform:rotate(-3deg)}}
+
+/* stickers */
+h2{margin:0;font:400 clamp(22px,5vw,30px)/1.1 var(--display);text-align:center}
+.sub{margin:6px 0 0;text-align:center;color:var(--mut);font-size:14px;font-family:var(--mono)}
+.board{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;width:100%}
+.st{width:min(240px,100%);padding:16px 16px 14px;border-radius:3px;color:#1b1d1a;box-shadow:0 14px 22px -16px rgba(0,0,0,.5);cursor:grab;touch-action:none;user-select:none;position:relative;display:flex;flex-direction:column;gap:6px;transition:box-shadow .2s}
+.st.drag{cursor:grabbing;box-shadow:0 26px 34px -18px rgba(0,0,0,.55);z-index:4}
+.st:before{content:"";position:absolute;top:-9px;left:50%;width:64px;height:18px;margin-left:-32px;background:rgba(255,255,255,.45);border:1px solid rgba(0,0,0,.06);transform:rotate(-3deg)}
+.st h3{margin:0;font:600 17px/1.25 var(--body)}
+.st p{margin:0;font-size:14px;opacity:.82}
+.st .num{font:400 26px/1 var(--display);margin-top:4px}
+.st .num small{font:400 11px var(--mono);opacity:.75;display:block;margin-top:2px}
+.y{background:#f7e27a}.p{background:#f6b9c9}.g{background:#b6e3c9}.b{background:#b9d3f7}.o{background:#f8c99a}.v{background:#d7c6f2}
+
+/* contact strip */
+.contact{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.big{display:inline-block;font:400 clamp(20px,5vw,26px) var(--display);background:var(--ink);color:var(--desk);padding:14px 26px;border-radius:12px;text-decoration:none;transition:transform .15s}
+.big:hover{transform:translateY(-3px) rotate(-1deg)}
+.contact small{font:400 12px var(--mono);color:var(--mut)}
+
+/* robot + receipt printer */
+.robot{position:fixed;right:18px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:7;width:74px;height:86px;border:0;background:none;padding:0;cursor:pointer;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.robot .ant{position:absolute;left:50%;top:0;width:2px;height:14px;margin-left:-1px;background:var(--ink)}
+.robot .ant:after{content:"";position:absolute;left:-4px;top:-8px;width:10px;height:10px;border-radius:50%;background:var(--pink);animation:led 1.6s infinite}
+@keyframes led{50%{background:var(--warm);box-shadow:0 0 10px var(--warm)}}
+.robot .head{position:absolute;left:4px;right:4px;top:14px;height:46px;border-radius:14px;background:var(--card);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
+.robot .eye{position:absolute;top:13px;width:16px;height:16px;border-radius:50%;background:var(--ink);overflow:hidden}
+.robot .eye.l{left:11px}.robot .eye.r{right:11px}
+.robot .eye i{position:absolute;left:5px;top:5px;width:6px;height:6px;border-radius:50%;background:#fff}
+.robot .lid{position:absolute;inset:0;background:var(--card);transform:scaleY(0);transform-origin:top;transition:transform .08s}
+.robot.blink .lid{transform:scaleY(1)}
+.robot .mouth{position:absolute;left:50%;bottom:7px;width:16px;height:5px;margin-left:-8px;border:2px solid var(--ink);border-top:0;border-radius:0 0 8px 8px}
+.robot .body{position:absolute;left:18px;right:18px;top:62px;height:22px;border-radius:6px 6px 10px 10px;background:var(--acc);border:2px solid var(--ink)}
+.robot .say{position:absolute;right:70px;top:4px;white-space:nowrap;font:700 20px/1 var(--hand);background:var(--card);border:2px solid var(--ink);border-radius:12px 12px 2px 12px;padding:6px 10px;color:var(--ink);transform-origin:right bottom;animation:hi 6s 1.5s both}
+@keyframes hi{0%{transform:scale(0)}6%,85%{transform:scale(1)}100%{transform:scale(0)}}
+
+.printer{position:fixed;right:14px;bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:7;width:min(300px,calc(100vw - 28px));display:flex;flex-direction:column;align-items:center;animation:open .3s cubic-bezier(.3,1.4,.5,1) both;transform-origin:bottom right}
+@keyframes open{from{transform:scale(.6);opacity:0}}
+.paperwrap{width:86%;max-height:min(52vh,420px);overflow-y:auto;display:flex;flex-direction:column-reverse;scrollbar-width:none}
+.paperwrap::-webkit-scrollbar{display:none}
+.paper{background:#fffdf4;color:#222;font:400 13px/1.45 var(--mono);padding:14px 14px 8px;position:relative;box-shadow:0 6px 18px -8px rgba(0,0,0,.4);
+  -webkit-mask:linear-gradient(#000,#000) 0 10px/100% 100% no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 0 0/12px 10px repeat-x;
+  mask:linear-gradient(#000,#000) 0 10px/100% 100% no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 0 0/12px 10px repeat-x;padding-top:20px}
+.paper .hd{text-align:center;border-bottom:1px dashed #999;padding-bottom:6px;margin-bottom:6px}
+.paper .hd b{font:400 18px var(--display);display:block;letter-spacing:.02em}
+.paper .q{color:#555;margin-top:6px}
+.paper .q:before{content:"> "}
+.paper .a{white-space:pre-wrap}
+.paper .sep{border-top:1px dashed #999;margin:8px 0 2px}
+.paper .a a{color:#1d5bc4;font-weight:600}
+.paper.tear{animation:tear .6s ease-in forwards}
+@keyframes tear{to{transform:translate(120px,-260px) rotate(35deg);opacity:0}}
+.pbody{width:100%;background:#2b2f2d;border-radius:14px 14px 18px 18px;padding:12px 12px 14px;box-shadow:0 18px 30px -14px rgba(0,0,0,.6);position:relative}
+.pbody:before{content:"";position:absolute;left:7%;right:7%;top:-4px;height:8px;border-radius:4px;background:#111}
+.pbody .lbl{display:flex;justify-content:space-between;align-items:center;font:400 10px var(--mono);color:#9aa49e;margin:4px 2px 10px}
+.pbody .lbl i{width:8px;height:8px;border-radius:50%;background:#5cc07c;box-shadow:0 0 8px #5cc07c}
+.pbody .lbl i.busy{background:#e8b13a;box-shadow:0 0 8px #e8b13a;animation:blink .4s infinite}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.keys button{font:600 12px var(--body);color:#1b1d1a;background:#e9e4d6;border:0;border-radius:7px;padding:9px 6px;cursor:pointer;box-shadow:0 3px 0 #a8a294;transition:transform .05s,box-shadow .05s}
+.keys button:active,.keys button.down{transform:translateY(3px);box-shadow:0 0 0 #a8a294}
+.keys button.red{background:#e46f8f;color:#fff;box-shadow:0 3px 0 #a3445f}
+.keys button:disabled{opacity:.5;cursor:wait}
+
+/* polaroids */
+.pols{display:flex;flex-wrap:wrap;justify-content:center;gap:26px;width:100%}
+.pol{width:min(230px,100%);background:#fdfdfb;padding:10px 10px 0;box-shadow:0 16px 26px -16px rgba(0,0,0,.55);cursor:grab;touch-action:none;user-select:none;color:#222;transition:box-shadow .2s}
+.pol.drag{cursor:grabbing;z-index:4;box-shadow:0 28px 36px -18px rgba(0,0,0,.6)}
+.pol .shot{aspect-ratio:1/1;border-radius:2px;overflow:hidden;position:relative;background:#1d2320;filter:saturate(.9) contrast(1.05)}
+.pol .shot:after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,240,200,.18),transparent 50%,rgba(0,0,0,.12));pointer-events:none}
+.pol figcaption{font:700 22px/1 var(--hand);text-align:center;padding:10px 4px 12px;color:#333}
+/* (old fake shots removed) */
+.s1{background:linear-gradient(160deg,#25407a,#121a2c);display:flex;align-items:center;justify-content:center}
+.s1 .ph{width:46%;height:86%;border-radius:12px;background:#f4f6fb;border:3px solid #0b0f19;padding:8px 6px;display:flex;flex-direction:column;gap:5px}
+.s1 .ph b{display:block;height:18px;border-radius:5px;background:#2156d9}
+.s1 .ph i{display:block;height:7px;border-radius:3px;background:#d7dcea}
+.s1 .ph i:nth-child(3){width:70%}.s1 .ph i:nth-child(5){width:55%}
+.s1 .ph em{margin-top:auto;display:block;height:16px;border-radius:5px;background:#2f8a4e}
+/* shot 2: spreads */
+.s2{background:#0f1412;padding:12px;font:400 10px/1.7 var(--mono);color:#cfe1d6}
+.s2 div{display:flex;justify-content:space-between;border-bottom:1px dashed #2a332e}
+.s2 b{color:#5cc07c;font-weight:600}
+.s2 canvas{width:100%;height:46px;margin-top:8px;display:block}
+/* shot 3: ai photo before/after */
+.s3{display:grid;grid-template-columns:1fr 1fr}
+.s3 .bf{background:#cfcfcf;display:flex;align-items:center;justify-content:center;position:relative}
+.s3 .af{background:linear-gradient(180deg,#f3ece0 0%,#e8dccb 55%,#cdb89c 56%,#bfa98b 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.s3 .af:before{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,220,.55) 48%,transparent 56%)}
+.s3 .hoodie{width:58%;aspect-ratio:1/1.05;background:#5f6670;border-radius:30% 30% 8% 8%;position:relative;box-shadow:0 8px 10px -6px rgba(0,0,0,.4)}
+.s3 .af .hoodie{background:#8a7560}
+.s3 .hoodie:before{content:"";position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(0,0,0,.25)}
+.s3 span{position:absolute;bottom:6px;left:6px;font:600 9px var(--mono);background:rgba(0,0,0,.55);color:#fff;padding:1px 5px;border-radius:3px}
+/* mug */
+.mug{position:relative;width:40px;height:34px;border:0;padding:0;background:none;cursor:pointer;flex:none}
+.mug .cup{position:absolute;left:0;bottom:0;width:30px;height:28px;background:var(--card);border:2px solid var(--ink);border-radius:2px 2px 9px 9px}
+.mug .cup:after{content:"";position:absolute;right:-11px;top:5px;width:9px;height:12px;border:2px solid var(--ink);border-left:0;border-radius:0 7px 7px 0}
+.mug .cof{position:absolute;left:3px;right:3px;top:3px;height:4px;border-radius:2px;background:#6b4423}
+.mug .stm{position:absolute;bottom:30px;width:3px;height:12px;border-radius:2px;background:var(--mut);opacity:0;animation:steam 2.2s infinite}
+.mug .stm:nth-child(1){left:8px}.mug .stm:nth-child(2){left:15px;animation-delay:.7s}.mug .stm:nth-child(3){left:22px;animation-delay:1.4s}
+@keyframes steam{0%{transform:translateY(4px) scaleY(.6);opacity:0}40%{opacity:.5}100%{transform:translateY(-10px) scaleY(1.2) skewX(10deg);opacity:0}}
+.mug.empty .cof{opacity:0}.mug.empty .stm{display:none}
+.topr{display:flex;align-items:flex-end;gap:14px}
+
+
+/* note */
+.note{position:relative;max-width:360px;font:700 24px/1.15 var(--hand);color:var(--acc);text-align:center;margin-top:-20px;rotate:-2deg}
+.note svg{position:absolute;left:-70px;top:-38px;width:90px;height:45px;color:var(--acc);transform:scaleX(-1)}
+@media (max-width:560px){.note svg{display:none}}
+/* real photos */
+.pol .shot img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.cmp{position:relative}
+.cmp>img{position:absolute;inset:0}
+.bfw{position:absolute;inset:0;width:50%;overflow:hidden;border-right:2px solid #fff}
+.bfw img{width:calc(var(--W,230px));max-width:none;height:100%}
+.hdl{position:absolute;top:0;bottom:0;left:50%;width:40px;margin-left:-20px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:2}
+.hdl b{width:30px;height:30px;border-radius:50%;background:#fff;color:#222;display:grid;place-items:center;font:600 14px var(--mono);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.cmp span{position:absolute;bottom:6px;font:600 10px var(--mono);background:rgba(0,0,0,.55);color:#fff;padding:2px 6px;border-radius:3px;z-index:1}
+.cmp .l1{left:6px}.cmp .l2{right:6px}
+/* modal */
+.veil{position:fixed;inset:0;z-index:20;background:rgba(10,14,12,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .2s both}
+@keyframes fade{from{opacity:0}}
+.big-note{width:min(560px,100%);max-height:88vh;overflow-y:auto;padding:28px 26px 22px;border-radius:4px;color:#1b1d1a;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);position:relative;animation:unfold .45s cubic-bezier(.3,1.4,.5,1) both;transform-origin:center top}
+@keyframes unfold{from{transform:scale(.4) rotate(-8deg);opacity:0}}
+.big-note:before{content:"";position:absolute;top:-10px;left:50%;width:90px;height:22px;margin-left:-45px;background:rgba(255,255,255,.5);transform:rotate(-2deg)}
+.big-note h3{margin:0 0 6px;font:400 26px/1.1 var(--display)}
+.big-note .tagl{font:700 22px/1.1 var(--hand);opacity:.8;margin-bottom:14px}
+.big-note p{margin:0 0 12px;font-size:15.5px}
+.big-note ul{margin:0 0 14px;padding-left:1.1em;font-size:15px;display:flex;flex-direction:column;gap:4px}
+.big-note .nums{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0 14px}
+.big-note .nums b{display:block;font:400 26px/1 var(--display)}
+.big-note .nums span{font:400 12px var(--mono);opacity:.75}
+.big-note .stk{display:flex;gap:6px;flex-wrap:wrap}
+.big-note .stk span{font:400 12px var(--mono);background:rgba(0,0,0,.08);border-radius:4px;padding:2px 7px}
+.big-note img{width:100%;border-radius:4px;margin:4px 0 14px;display:block;box-shadow:0 6px 14px -8px rgba(0,0,0,.5)}
+.big-note .x{position:absolute;top:10px;right:12px;background:none;border:0;font:400 28px/1 var(--body);cursor:pointer;color:#1b1d1a;opacity:.6}
+.big-note .gos{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.big-note .go.open{background:#1b1d1a;color:#fff;font:600 14px var(--body);padding:8px 14px;border-radius:8px;text-decoration:none}
+.big-note .go{display:inline-block;margin-top:6px;font:700 22px var(--hand);color:#1b1d1a}
+.lightbox img{max-width:min(900px,100%);max-height:86vh;border-radius:4px;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);animation:unfold .35s cubic-bezier(.3,1.4,.5,1) both;background:#fff;padding:10px 10px 40px}
+
+/* tickets */
+.tickets{display:flex;flex-direction:column;gap:16px;width:min(620px,100%)}
+.tk{--n:12px;display:flex;text-decoration:none;color:#1b1d1a;background:#fbf7ea;border-radius:8px;box-shadow:0 14px 24px -18px rgba(0,0,0,.6);transition:transform .25s cubic-bezier(.3,1.5,.5,1),box-shadow .25s;
+  -webkit-mask:radial-gradient(circle var(--n) at calc(100% - 132px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle var(--n) at calc(100% - 132px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle var(--n) at calc(100% - 132px) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle var(--n) at calc(100% - 132px) 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+a.tk:hover{transform:translateY(-4px) rotate(0deg)!important;box-shadow:0 22px 30px -18px rgba(0,0,0,.6)}
+.tk-main{flex:1;min-width:0;padding:16px 18px;display:flex;flex-direction:column;gap:3px;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(0,0,0,.018) 10px 20px)}
+.tk-no{font:400 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;opacity:.6}
+.tk b{font:400 clamp(17px,4.4vw,21px)/1.15 var(--display)}
+.tk-d{font-size:14px;opacity:.75}
+.live{display:flex;align-items:center;gap:6px;font:400 11px var(--mono);color:#2f8a4e;margin-top:4px}
+.live i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:ping2 1.8s infinite}
+@keyframes ping2{0%{box-shadow:0 0 0 0 rgba(47,138,78,.5)}100%{box-shadow:0 0 0 8px transparent}}
+.live.off{color:#8a8a80}.live.off i{animation:none}
+.tk-stub{width:132px;flex:none;border-left:2px dashed rgba(0,0,0,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;background:#f2e3b6;text-align:center;transition:transform .3s cubic-bezier(.3,1.6,.5,1);transform-origin:left center}
+.tk-stub span{font:400 11px var(--mono);word-break:break-all;opacity:.8}
+.tk-stub em{font:700 22px/1 var(--hand);font-style:normal}
+a.tk:hover .tk-stub{transform:rotate(4deg) translateX(3px)}
+.tk:nth-child(2) .tk-stub{background:#cfe0f7}.tk:nth-child(3) .tk-stub{background:#cdebd8}.tk:nth-child(4) .tk-stub{background:#f6cfd9}
+.tk.closed{opacity:.8}.tk.closed .tk-stub{background:#e3e1d8}
+@media (max-width:460px){.tk{--n:10px;-webkit-mask:none;mask:none}.tk-stub{width:104px}}
+
+.bugs{color:var(--good);font-weight:600}
+
+/* broken state */
+.fixbar{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:8;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:open .3s both}
+.fixbar b{font:400 20px var(--display)}
+.fixbar button{font:600 15px var(--body);background:var(--good);color:#fff;border:0;border-radius:10px;padding:11px 20px;cursor:pointer}
+
+.plane{position:fixed;z-index:9;pointer-events:none;font-size:26px;color:var(--acc)}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translate(-50%,-120px);background:var(--ink);color:var(--desk);font:400 13px var(--mono);padding:10px 16px;border-radius:8px;transition:transform .3s;z-index:10}
+.toast.show{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="net" aria-hidden="true"></canvas>
+<div class="cord" id="cord" title="дёрни" tabindex="0" role="button" aria-label="Переключить тему"><div class="str"></div><div class="knob"></div><small>свет</small></div>
+
+<div class="w">
+  <div class="top">
+    <div class="saved" data-fall>пока вы тут, мои боты сэкономили людям <b id="saved">0 ч 00 мин</b> · багов поймано: <span class="bugs" id="bugs">0</span></div>
+    <div class="topr" data-fall><button class="mug" id="mug" type="button" aria-label="Кружка кофе"><span class="stm"></span><span class="stm"></span><span class="stm"></span><span class="cup"><span class="cof"></span></span></button><button class="breakbtn" id="break" type="button">не нажимать</button></div>
+  </div>
+
+  <div class="scene" data-fall>
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Визитка, нажмите чтобы перевернуть">
+      <div class="inner" id="inner">
+        <div class="face front">
+          <div class="glare"></div>
+          <div>
+            <div class="name" id="name"><span>s</span><span>h</span><span>a</span><span>z</span><span>e</span></div>
+            <div class="role"><b>Telegram‑боты</b> · сервисы · автоматизация</div>
+          </div>
+          <div class="tline" id="tline"></div>
+          <div class="chipline"><div style="display:flex;gap:10px;align-items:center"><div class="chip"><i></i><i></i><i></i><i></i><i></i></div><svg class="nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 7a7 7 0 0 1 0 10"/><path d="M12 5a10 10 0 0 1 0 14"/><path d="M16 3a13 13 0 0 1 0 18"/></svg></div><span class="hintf">нажми, чтобы перевернуть ↻</span></div>
+        </div>
+        <div class="face back">
+          <div class="glare"></div>
+          <h3>Чем могу помочь</h3>
+          <ul><li>боты с оплатой</li><li>Mini Apps</li><li>ИИ‑автоматизация</li><li>сбор данных</li><li>сайты и кабинеты</li><li>серверы и бэкапы</li></ul>
+          <div class="tg"><a href="https://t.me/shaze6664">t.me/shaze6664</a><small>отвечаю за пару часов</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note" data-fall><span>привет! я делаю ботов и автоматизацию для бизнеса. тут всё можно трогать: визитку, стикеры, жуков, шнурок и даже кнопку «не нажимать»</span>
+    <svg viewBox="0 0 120 60" aria-hidden="true"><path d="M110 50 C 80 55, 40 50, 20 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 22 L20 12 L30 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+  <div class="tags" data-fall>
+    <span class="tag">Python</span><span class="tag">Telegram Bot API</span><span class="tag">Mini Apps</span><span class="tag">ИИ / LLM</span><span class="tag">распознавание речи</span><span class="tag">биржевые API</span><span class="tag">Flask</span><span class="tag">Linux</span><span class="tag">оплата и подписки</span><span class="tag">бэкапы 24/7</span>
+  </div>
+
+  <div data-fall><h2>Что уже сделал</h2><p class="sub">таскайте стикеры, нажмите, чтобы прочитать подробнее</p></div>
+  <div class="board" id="board">
+    <div class="st y" data-id="sub" tabindex="0" role="button" data-fall style="rotate:-2deg"><h3>Подписочный сервис</h3><p>Бот, сайт и кабинет в Mini App. Оплата, автопродление, рефералка, админка.</p><div class="num">400+<small>клиентов, 0 ручной работы</small></div></div>
+    <div class="st b" data-id="spr" tabindex="0" role="button" data-fall style="rotate:1.5deg"><h3>Сканер спредов</h3><p>Ищет разницу цен между биржами и шлёт только исполнимые сделки.</p><div class="num">9 бирж<small>10 000 пар за 4 секунды</small></div></div>
+    <div class="st p" data-id="fab" tabindex="0" role="button" data-fall style="rotate:-1deg"><h3>Фабрика объявлений</h3><p>Таблица поставщика превращается в объявления: ИИ‑фото, заголовки, тексты.</p><div class="num">3 мин<small>на товар вместо 40</small></div></div>
+    <div class="st g" data-id="aud" tabindex="0" role="button" data-fall style="rotate:2deg"><h3>Конспекты из аудио</h3><p>Кидаешь запись лекции или созвона, получаешь документ Word.</p><div class="num">90 → 5<small>минут на разбор записи</small></div></div>
+    <div class="st o" data-id="pan" tabindex="0" role="button" data-fall style="rotate:-2.5deg"><h3>Панель серверов</h3><p>Всё в одном окне, ночные бэкапы, тревога в Telegram, если что‑то упало.</p><div class="num">24/7<small>под присмотром</small></div></div>
+    <div class="st b" data-id="web" tabindex="0" role="button" data-fall style="rotate:-1.5deg"><h3>Сайты и кабинеты</h3><p>Лендинг, вход по логину, личный кабинет, статус сервиса, чат поддержки.</p><div class="num">1 сек<small>от заявки до ключа</small></div></div>
+    <div class="st v" data-id="you" tabindex="0" role="button" data-fall style="rotate:1deg"><h3>Ваш проект</h3><p>Запись клиентов, магазин в Telegram, ИИ‑консультант, мониторинг цен…</p><div class="num">от 3 дн<small>до первой версии</small></div></div>
+  </div>
+
+  <div data-fall><h2>Работает прямо сейчас</h2><p class="sub">билеты в живые проекты: жмите и смотрите сами</p></div>
+  <div class="tickets">
+    <a class="tk" data-fall href="https://hideandseek.website/" target="_blank" rel="noopener" style="rotate:-1deg"><div class="tk-main"><span class="tk-no">№ 001 · сайт + кабинет</span><b>Сервис по подписке</b><span class="tk-d">лендинг, ключ за секунду, личный кабинет</span><span class="live"><i></i>работает сейчас</span></div><div class="tk-stub"><span>hideandseek.website</span><em>открыть ↗</em></div></a>
+    <a class="tk" data-fall href="https://t.me/APE_IBCH_bot" target="_blank" rel="noopener" style="rotate:1deg"><div class="tk-main"><span class="tk-no">№ 002 · бот + mini app</span><b>Бот подписки</b><span class="tk-d">оплата, автопродление, кабинет в Telegram</span><span class="live"><i></i>работает сейчас</span></div><div class="tk-stub"><span>@APE_IBCH_bot</span><em>открыть ↗</em></div></a>
+    <a class="tk" data-fall href="https://t.me/TopTimeSpred_bot" target="_blank" rel="noopener" style="rotate:-.5deg"><div class="tk-main"><span class="tk-no">№ 003 · данные</span><b>Сканер спредов</b><span class="tk-d">9 бирж, сигналы в реальном времени</span><span class="live"><i></i>работает сейчас</span></div><div class="tk-stub"><span>@TopTimeSpred_bot</span><em>открыть ↗</em></div></a>
+    <a class="tk" data-fall href="https://t.me/HideAndStudy_bot" target="_blank" rel="noopener" style="rotate:.8deg"><div class="tk-main"><span class="tk-no">№ 004 · ИИ</span><b>Конспекты из аудио</b><span class="tk-d">запись лекции → документ Word</span><span class="live"><i></i>работает сейчас</span></div><div class="tk-stub"><span>@HideAndStudy_bot</span><em>открыть ↗</em></div></a>
+    <div class="tk closed" data-fall style="rotate:-.8deg"><div class="tk-main"><span class="tk-no">№ 005 · закрытые</span><b>Панель серверов, фабрика объявлений</b><span class="tk-d">работают у владельцев, демо покажу в переписке</span><span class="live off"><i></i>по приглашению</span></div><div class="tk-stub"><span>только по запросу</span><em>🔒</em></div></div>
+  </div>
+
+  <div class="contact" data-fall>
+    <h2>Есть задача?</h2>
+    <a class="big" href="https://t.me/shaze6664">написать @shaze6664</a>
+    <small>или спросите у робота в углу ↘</small>
+  </div>
+</div>
+
+<button class="robot" id="robot" type="button" aria-label="Открыть бота-секретаря"><span class="say">я тут!</span><span class="ant"></span><span class="head"><span class="eye l"><i></i><span class="lid"></span></span><span class="eye r"><i></i><span class="lid"></span></span><span class="mouth"></span></span><span class="body"></span></button>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,root=document.documentElement;
+function css(n){return getComputedStyle(root).getPropertyValue(n).trim()}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove('show')},2400)}
+
+/* background: grid paper that bends under the cursor, ripples on click, signals run along the lines */
+var cv=document.getElementById('net'),cx=cv.getContext('2d'),W,H,col={},G=28,ST=14;
+var M={x:-9999,y:-9999,tx:-9999,ty:-9999,on:0},R=[],S=[];
+function size(){var d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0)}
+function cols(){col.g=css('--grid');col.a=css('--acc');col.w=css('--warm')}
+size();cols();addEventListener('resize',size);
+addEventListener('pointermove',function(e){M.tx=e.clientX;M.ty=e.clientY;if(M.x<-999){M.x=M.tx;M.y=M.ty}M.on=1});
+document.addEventListener('pointerleave',function(){M.on=0});
+function ripple(x,y,a){R.push({x:x,y:y,t:performance.now(),a:a||14});if(R.length>6)R.shift()}
+addEventListener('pointerdown',function(e){if(!e.target.closest('a,button,.st,.pol,.tk,.card,.printer,.veil,.robot,.cord,.bug'))ripple(e.clientX,e.clientY,16)});
+function disp(x,y,now){var dx=0,dy=0,vx=x-M.x,vy=y-M.y,d2=vx*vx+vy*vy;
+  if(M.on&&d2<90000){var d=Math.sqrt(d2)||1,f=22*Math.exp(-d2/(2*95*95));dx+=vx/d*f;dy+=vy/d*f}
+  for(var k=0;k<R.length;k++){var r=R[k],age=(now-r.t),rad=age*.55,ux=x-r.x,uy=y-r.y,dd=Math.sqrt(ux*ux+uy*uy)||1,o=dd-rad;
+    if(o>-120&&o<120){var A=r.a*Math.exp(-age/1400)*Math.sin(o/16)*Math.exp(-o*o/5000);dx+=ux/dd*A;dy+=uy/dd*A}}
+  return [x+dx,y+dy]}
+function spawnSignal(){var h=Math.random()<.5,lim=h?W:H,fwd=Math.random()<.5;S.push({h:h,l:(1+Math.floor(Math.random()*((h?H:W)/G-1)))*G,p:fwd?-60:lim+60,v:(fwd?1:-1)*rnd(.18,.34),c:Math.random()<.8?'a':'w'})}
+var last=performance.now();
+function frame(now){var dt=Math.min(50,now-last);last=now;
+  M.x+=(M.tx-M.x)*.18;M.y+=(M.ty-M.y)*.18;
+  for(var k=R.length-1;k>=0;k--)if(now-R[k].t>4000)R.splice(k,1);
+  cx.clearRect(0,0,W,H);cx.lineWidth=1;cx.strokeStyle=col.g;cx.beginPath();
+  var x,y,q;
+  for(x=0;x<=W+G;x+=G){for(y=-ST;y<=H+ST;y+=ST){q=disp(x,y,now);y===-ST?cx.moveTo(q[0],q[1]):cx.lineTo(q[0],q[1])}}
+  for(y=0;y<=H+G;y+=G){for(x=-ST;x<=W+ST;x+=ST){q=disp(x,y,now);x===-ST?cx.moveTo(q[0],q[1]):cx.lineTo(q[0],q[1])}}
+  cx.stroke();
+  if(!reduce){if(S.length<5&&Math.random()<.02)spawnSignal();
+    for(k=S.length-1;k>=0;k--){var s2=S[k];s2.p+=s2.v*dt;var lim=s2.h?W:H;if(s2.p<-80||s2.p>lim+80){S.splice(k,1);continue}
+      cx.strokeStyle=s2.c==='a'?col.a:col.w;cx.lineWidth=2;cx.lineCap='round';
+      for(var t=0;t<6;t++){var p1=s2.p-s2.v/Math.abs(s2.v)*t*12,p2=p1-s2.v/Math.abs(s2.v)*12;cx.globalAlpha=(1-t/6)*.9;cx.beginPath();
+        var a1=s2.h?disp(p1,s2.l,now):disp(s2.l,p1,now),a2=s2.h?disp(p2,s2.l,now):disp(s2.l,p2,now);cx.moveTo(a1[0],a1[1]);cx.lineTo(a2[0],a2[1]);cx.stroke()}
+      cx.globalAlpha=1;var hd=s2.h?disp(s2.p,s2.l,now):disp(s2.l,s2.p,now);cx.fillStyle=cx.strokeStyle;cx.beginPath();cx.arc(hd[0],hd[1],2.6,0,7);cx.fill()}}
+  if(!reduce)requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+/* card tilt + flip */
+var card=document.getElementById('card'),inner=document.getElementById('inner'),flipped=false;
+function setTilt(rx,ry){inner.style.transform='perspective(1000px) rotateX('+rx+'deg) rotateY('+ry+'deg)'}
+var tq=null,tqr=false,busy=false,glares=card.querySelectorAll('.glare');
+if(!reduce&&matchMedia('(hover:hover)').matches){card.addEventListener('pointermove',function(e){if(busy)return;var r=card.getBoundingClientRect();tq=[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];
+  if(tqr)return;tqr=true;requestAnimationFrame(function(){tqr=false;if(busy)return;var x=tq[0],y=tq[1];inner.classList.add('hov');setTilt((.5-y)*12,(x-.5)*18);
+    glares.forEach(function(g){g.style.transform='translate('+(x*100)+'%,'+(y*100)+'%)'})})});
+  card.addEventListener('pointerleave',function(){inner.classList.remove('hov');setTilt(0,0)})}
+function flip(){if(busy)return;busy=true;var cr=card.getBoundingClientRect();ripple(cr.left+cr.width/2,cr.top+cr.height/2,12);inner.classList.remove('hov');
+  if(reduce||!inner.animate){flipped=!flipped;card.classList.toggle('flipped',flipped);busy=false;return}
+  inner.classList.add('flipping');var dir=flipped?-1:1;
+  inner.animate([{transform:'perspective(1000px) rotateY(0deg)'},{transform:'perspective(1000px) rotateY('+(90*dir)+'deg)'}],{duration:170,easing:'ease-in'}).onfinish=function(){
+    flipped=!flipped;card.classList.toggle('flipped',flipped);
+    inner.animate([{transform:'perspective(1000px) rotateY('+(-90*dir)+'deg)'},{transform:'perspective(1000px) rotateY('+(8*dir)+'deg)'},{transform:'perspective(1000px) rotateY(0deg)'}],{duration:380,easing:'ease-out'}).onfinish=function(){
+      inner.style.transform='perspective(1000px)';inner.classList.remove('flipping');busy=false}}}
+card.addEventListener('click',flip);card.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();flip()}});
+
+/* typed jokes on the card */
+var lines=['делаю так, чтобы работало само','бот не просит отпуск','автоматизирую то, что бесит','работает, пока вы спите','чиню то, что сломали до меня','ваш новый сотрудник за 0 ₽/мес'],li=0,tl=document.getElementById('tline');
+function typeLine(){var s=lines[li++%lines.length],k=0;tl.textContent='';var t=setInterval(function(){tl.textContent=s.slice(0,++k);if(k>=s.length){clearInterval(t);setTimeout(erase,2200)}},45)}
+function erase(){var t=setInterval(function(){tl.textContent=tl.textContent.slice(0,-1);if(!tl.textContent){clearInterval(t);typeLine()}},22)}
+if(reduce)tl.textContent=lines[0];else typeLine();
+
+/* saved hours counter: 1 real second = 1 saved minute */
+var t0=Date.now(),sv=document.getElementById('saved');
+setInterval(function(){var m=Math.floor((Date.now()-t0)/1000),h=Math.floor(m/60);sv.textContent=h+' ч '+String(m%60).padStart(2,'0')+' мин'},1000);
+
+/* light cord */
+var cord=document.getElementById('cord'),pulls=0;
+function isDark(){var t=root.getAttribute('data-theme');return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
+cord.addEventListener('pointerdown',function(){cord.classList.add('pull')});cord.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();cord.classList.add('pull');dispatchEvent(new Event('pointerup'))}});
+addEventListener('pointerup',function(){if(!cord.classList.contains('pull'))return;cord.classList.remove('pull');
+  root.setAttribute('data-theme',isDark()?'light':'dark');setTimeout(cols,50);
+  pulls++;if(pulls===5)toast('электрик уже выехал');else if(pulls===10)toast('лампочка: «хватит»')});
+
+/* break the site */
+var broken=false,bodies=[],raf;
+document.getElementById('break').addEventListener('click',function(){if(broken)return;broken=true;ripple(innerWidth/2,innerHeight,40);document.body.classList.add('broken');
+  var els=[].slice.call(document.querySelectorAll('[data-fall]'));
+  bodies=els.map(function(el){var r=el.getBoundingClientRect();return {el:el,x:0,y:0,vx:rnd(-3,3),vy:rnd(-6,-1),r:0,vr:rnd(-4,4),floor:Math.max(innerHeight-r.bottom-4,0)}});
+  if(reduce){bodies.forEach(function(b){b.el.style.transform='translateY('+b.floor+'px) rotate('+rnd(-20,20)+'deg)'})}
+  else (function step(){bodies.forEach(function(b){b.vy+=.6;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;
+    if(b.y>b.floor){b.y=b.floor;b.vy*=-.35;b.vx*=.8;b.vr*=.7}
+    b.el.style.transform='translate('+b.x+'px,'+b.y+'px) rotate('+b.r+'deg)'});raf=requestAnimationFrame(step)})();
+  setTimeout(function(){var f=document.createElement('div');f.className='fixbar';f.innerHTML='<b>упс, сломалось 🙃</b><span>бывает. зато чинить я умею</span><button type="button">починить</button>';document.body.appendChild(f);
+    f.querySelector('button').addEventListener('click',function(){cancelAnimationFrame(raf);f.remove();
+      bodies.forEach(function(b,k){b.el.style.transition='transform .7s cubic-bezier(.3,1.4,.5,1) '+(k*0.04)+'s';b.el.style.transform=''});
+      setTimeout(function(){bodies.forEach(function(b){b.el.style.transition=''});broken=false;document.body.classList.remove('broken');toast('починил за 0,7 секунды. так и работаем')},1200)})},1100)});
+
+/* paper planes easter egg: type "shaze" or click the name 5 times */
+function planes(){toast('пасхалка найдена ✈');for(var k=0;k<24;k++)(function(k){setTimeout(function(){var p=document.createElement('div');p.className='plane';p.textContent='✈';var y=rnd(0,innerHeight);p.style.left='-40px';p.style.top=y+'px';document.body.appendChild(p);
+  var a=p.animate([{transform:'translate(0,0) rotate(-10deg)'},{transform:'translate('+(innerWidth+80)+'px,'+rnd(-200,200)+'px) rotate(10deg)'}],{duration:rnd(1600,3000),easing:'ease-in'});a.onfinish=function(){p.remove()}},k*90)})(k)}
+var buf='';addEventListener('keydown',function(e){if(e.target.tagName==='INPUT')return;buf=(buf+e.key.toLowerCase()).slice(-5);if(buf==='shaze')planes()});
+var nc=0;document.getElementById('name').addEventListener('click',function(e){e.stopPropagation();if(++nc>=5){nc=0;planes()}});
+
+/* polaroid: live spreads */
+(function(){var b=document.getElementById('s2');if(!b)return;var ex=['Binance','Bybit','OKX','Gate','MEXC','KuCoin'],pr=['TON','SUI','ARB','PEPE','WIF'];
+  function rows(){var h='';for(var k=0;k<4;k++){var a=ex[Math.floor(Math.random()*6)],c=ex[(ex.indexOf(a)+1+Math.floor(Math.random()*5))%6];h+='<div><span>'+pr[Math.floor(Math.random()*5)]+' '+a.slice(0,3)+'→'+c.slice(0,3)+'</span><b>+'+rnd(.5,2.4).toFixed(2)+'%</b></div>'}return h}
+  b.innerHTML=rows()+'<canvas></canvas>';var cvs=b.querySelector('canvas'),pts=[];for(var k=0;k<40;k++)pts.push(rnd(.2,.8));
+  function draw(){var r=cvs.getBoundingClientRect(),d=devicePixelRatio||1;if(!r.width)return;cvs.width=r.width*d;cvs.height=r.height*d;var x=cvs.getContext('2d');x.scale(d,d);x.beginPath();
+    pts.forEach(function(v,k){var px=k/(pts.length-1)*r.width,py=r.height-v*r.height;k?x.lineTo(px,py):x.moveTo(px,py)});x.strokeStyle='#5cc07c';x.lineWidth=1.5;x.stroke()}
+  draw();if(!reduce)setInterval(function(){pts.shift();pts.push(Math.max(.05,Math.min(.95,pts[pts.length-1]+rnd(-.15,.15))));draw();if(Math.random()<.2){var c=b.querySelector('canvas');b.innerHTML=rows();b.appendChild(c)}},700)})();
+
+
+/* sticker details */
+var D={
+ sub:{c:'#f7e27a',t:'Подписочный сервис',h:'бизнес, который работает сам',u:'https://t.me/APE_IBCH_bot',ul:'открыть бота ↗',p:'Полноценный продукт с нуля: Telegram‑бот, сайт с личным кабинетом, кабинет клиента и админка внутри Telegram, своя серверная часть. Владелец только смотрит статистику.',
+  l:['оплата картой и СБП, автопродление, напоминания','реферальная программа с уровнями скидок и партнёрскими процентами','одна ссылка на клиента с лимитом устройств','рассылки, промокоды, админка в Mini App','мониторинг: если сервер недоступен, сайт сам переходит в режим «технические работы»'],
+  n:[['400+','клиентов'],['0 ч','ручной работы'],['3','сервера']],s:['Python','Flask','Mini Apps','SQLite','nginx']},
+ spr:{c:'#b9d3f7',u:'https://t.me/TopTimeSpred_bot',ul:'открыть бота ↗',t:'Сканер спредов',h:'9 бирж, пока вы спите',p:'Бот ищет разницу цен одной монеты на разных биржах. Проверяет глубину стакана и объём, чтобы присылать только сделки, которые реально исполнить.',
+  l:['Binance, Bybit, OKX, KuCoin, Gate, MEXC, Bitget, BingX, HTX','около 10 000 пар за один проход в 4 секунды','фильтр мусорных токенов и низкого оборота','сигнал в Telegram со ссылками на обе биржи'],
+  n:[['9','бирж'],['10 000','пар'],['4 с','проход']],s:['asyncio','aiohttp','aiogram','REST API']},
+ fab:{c:'#f6b9c9',t:'Фабрика объявлений',h:'из таблицы сразу в объявление',p:'Система для продавца на маркетплейсе. Берёт таблицу поставщика, сама отбирает товары в наличии, делает фото на красивом фоне, пишет заголовки и описание и выкладывает по городам. На сообщения покупателей отвечает ИИ.',
+  l:['ИИ‑обработка фото товара: нужный фон, свет, ракурс','сотни вариантов заголовков, чтобы объявления не повторялись','несколько аккаунтов и городов, автозагрузка','ИИ‑продавец в чате: подбирает размер, оформляет заказ, сложное зовёт человека'],
+  n:[['3 мин','на товар вместо 40'],['4 ₽','за фото']],s:['LLM','генерация фото','Google Sheets','XML']},
+ aud:{c:'#b6e3c9',u:'https://t.me/HideAndStudy_bot',ul:'открыть бота ↗',t:'Конспекты из аудио',h:'90 минут записи → 5 минут чтения',p:'Отправляешь в бот запись лекции или созвона и получаешь аккуратный конспект в Word: разделы, термины, задачи, вопросы для самопроверки.',
+  l:['распознавание речи на своём сервере, данные никуда не уходят','нейросеть делит текст на смысловые блоки','на выходе .docx, который не стыдно отправить'],
+  n:[['90 → 5','минут'],['.docx','на выходе']],s:['Whisper','LLM','python‑docx','ffmpeg']},
+ pan:{c:'#f8c99a',t:'Панель серверов',h:'всё хозяйство в одном окне',p:'Панель для владельца нескольких серверов: нагрузка, безопасность, резервные копии, журнал действий. Если что‑то упало, сообщение в Telegram приходит раньше, чем заметят клиенты.',
+  l:['ночные бэкапы всех серверов с проверкой восстановления','сторож доступности: проверка каждую минуту','аварийный стоп‑кран доступа одной кнопкой','веб‑версия и приложение для Mac'],
+  n:[['24/7','мониторинг'],['1 мин','интервал проверки']],s:['Python','bash','Swift','PWA']},
+ web:{c:'#b9d3f7',t:'Сайты и кабинеты',h:'сайт, который продаёт сам',u:'https://hideandseek.website/',ul:'открыть сайт ↗',p:'Сайт для подписочного сервиса: человек вводит свой @username, сразу получает пробный ключ и подтверждает его в боте. Дальше личный кабинет на сайте и в Telegram, одна учётная запись.',
+  l:['пробный доступ без карты, подтверждение через бота','вход по логину и паролю или через Telegram','страница статуса сервиса и чат поддержки на сайте','автоматический режим «технические работы», если сервер упал','быстрая загрузка, тёмная и светлая тема'],
+  n:[['1 сек','заявка → ключ'],['3 дня','бесплатно']],s:['Flask','HTML/CSS/JS','nginx','Let\'s Encrypt']},
+ you:{c:'#d7c6f2',t:'Ваш проект',h:'следующий стикер может быть ваш',p:'Если что‑то в бизнесе делается руками и повторяется каждый день, скорее всего, это можно отдать боту.',
+  l:['онлайн‑запись с предоплатой и напоминаниями','магазин внутри Telegram','ИИ‑консультант по вашей базе знаний','мониторинг цен конкурентов','закрытый канал по подписке'],
+  n:[['от 3 дн','до первой версии']],s:['обсудим']}
+};
+function veil(inner,cls){var v=document.createElement('div');v.className='veil '+(cls||'');v.innerHTML=inner;document.body.appendChild(v);
+  function close(){v.remove();removeEventListener('keydown',esc)}function esc(e){if(e.key==='Escape')close()}
+  v.addEventListener('click',function(e){if(e.target===v||e.target.closest('.x'))close()});addEventListener('keydown',esc);var x=v.querySelector('.x');x&&x.focus();return v}
+function detail(id){var d=D[id];if(!d)return;
+  veil('<div class="big-note" style="background:'+d.c+';rotate:'+rnd(-1.5,1.5).toFixed(1)+'deg" role="dialog" aria-label="'+d.t+'"><button class="x" type="button" aria-label="Закрыть">×</button><h3>'+d.t+'</h3><div class="tagl">'+d.h+'</div>'+
+    (d.img?'<img src="'+d.img+'" alt="">':'')+'<p>'+d.p+'</p><ul>'+d.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+
+    '<div class="nums">'+d.n.map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')+'</div><div class="stk">'+d.s.map(function(x){return '<span>'+x+'</span>'}).join('')+'</div>'+
+    '<div class="gos">'+(d.u?'<a class="go open" href="'+d.u+'" target="_blank" rel="noopener">'+d.ul+'</a>':'')+'<a class="go" href="https://t.me/shaze6664" target="_blank" rel="noopener">хочу так же → @shaze6664</a></div></div>')}
+
+/* drag vs click for stickers and polaroids */
+function draggable(s,onClick){var sx,sy,ox=0,oy=0,drag=false,moved=0,x0,y0;
+  s.addEventListener('pointerdown',function(e){if(broken||e.target.closest('.hdl'))return;drag=true;moved=0;x0=e.clientX;y0=e.clientY;s.setPointerCapture(e.pointerId);sx=e.clientX-ox;sy=e.clientY-oy});
+  s.addEventListener('pointermove',function(e){if(!drag)return;moved=Math.max(moved,Math.hypot(e.clientX-x0,e.clientY-y0));if(moved>5){s.classList.add('drag');ox=e.clientX-sx;oy=e.clientY-sy;s.style.translate=ox+'px '+oy+'px'}});
+  s.addEventListener('pointerup',function(){if(!drag)return;drag=false;s.classList.remove('drag');if(moved<=5&&onClick)onClick()});
+  s.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&onClick){e.preventDefault();onClick()}})}
+document.querySelectorAll('.st').forEach(function(s){draggable(s,function(){detail(s.dataset.id)})});
+document.querySelectorAll('.pol').forEach(function(s){draggable(s,s.dataset.big?function(){veil('<img src="'+s.dataset.big+'" alt="">','lightbox')}:null)});
+
+/* before/after slider */
+(function(){var c=document.getElementById('cmp'),w=document.getElementById('bfw'),h=document.getElementById('hdl'),on=false;if(!c)return;
+  function size(){c.style.setProperty('--W',c.clientWidth+'px')}size();addEventListener('resize',size);
+  function set(x){var r=c.getBoundingClientRect(),p=Math.max(0,Math.min(1,(x-r.left)/r.width));w.style.width=p*100+'%';h.style.left=p*100+'%'}
+  h.addEventListener('pointerdown',function(e){on=true;h.setPointerCapture(e.pointerId);e.stopPropagation()});
+  h.addEventListener('pointermove',function(e){if(on)set(e.clientX)});h.addEventListener('pointerup',function(){on=false});
+  if(!reduce){var t=0,a=setInterval(function(){t+=.05;var r=c.getBoundingClientRect();set(r.left+r.width*(.5+.32*Math.sin(t)));if(t>6.3){clearInterval(a);set(r.left+r.width*.5)}},40);h.addEventListener('pointerdown',function(){clearInterval(a)})}})();
+
+
+
+/* bugs crawl across the desk: catch them */
+var caught=0,bugEl=document.getElementById('bugs');
+function spawnBug(){if(document.hidden||broken){return setTimeout(spawnBug,5000)}
+  var b=document.createElement('div');b.className='bug';b.textContent='🪲';b.setAttribute('role','button');b.setAttribute('aria-label','Баг, поймайте его');document.body.appendChild(b);
+  var side=Math.random()<.5,x=side?-30:innerWidth+30,y=rnd(innerHeight*.2,innerHeight*.85),tx=side?innerWidth+30:-30,ty=rnd(innerHeight*.15,innerHeight*.9),t0=performance.now(),dur=rnd(9000,14000),alive=true,wig=rnd(20,60);
+  (function mv(now){if(!alive)return;var p=(now-t0)/dur;if(p>=1){b.remove();setTimeout(spawnBug,rnd(8000,16000));return}
+    var cx=x+(tx-x)*p,cy=y+(ty-y)*p+Math.sin(p*14)*wig,ang=Math.atan2(ty-y+Math.cos(p*14)*wig*14/ (dur/1000),tx-x)*180/Math.PI;
+    b.style.transform='translate('+cx+'px,'+cy+'px) rotate('+(ang+90)+'deg)';requestAnimationFrame(mv)})(t0);
+  b.addEventListener('pointerdown',function(e){e.stopPropagation();if(!alive)return;alive=false;caught++;bugEl.textContent=caught;b.classList.add('squash');
+    var r=b.getBoundingClientRect(),s2=document.createElement('div');s2.className='splat';s2.textContent=['баг исправлен ✓','ещё один ✓','в продакшен не попадёт','минус баг','тесты зелёные'][Math.min(caught-1,4)];s2.style.left=r.left+'px';s2.style.top=r.top+'px';document.body.appendChild(s2);
+    setTimeout(function(){b.remove();s2.remove()},1200);if(caught===10)toast('10 багов! возьмём вас в QA');setTimeout(spawnBug,rnd(6000,12000))})}
+if(!reduce)setTimeout(spawnBug,6000);
+
+
+
+
+/* coffee mug */
+var cups=0,mug=document.getElementById('mug');
+var CUPS=['кофе выпит. продуктивность +15%','второй. код пишется сам','третий. я вижу звуки','четвёртый. сервер просит меня успокоиться','пятый. я понимаю регулярные выражения','шестой. я и есть сервер','седьмой. кофемашина подала в суд','восьмой. видно время на 3 дня вперёд'];
+mug.addEventListener('click',function(){
+  if(mug.classList.contains('dry')){toast('кофе закончился. приходите завтра ☕');return}
+  if(mug.classList.contains('empty')){mug.classList.remove('empty');toast(cups>=6?'наливаю... руки уже дрожат':'налил ещё. кофе №'+(cups+1));return}
+  cups++;mug.classList.add('empty');
+  if(cups>CUPS.length){mug.classList.add('dry');toast('всё. кофе закончился во всём городе');setTimeout(function(){mug.classList.remove('dry','empty');cups=0;toast('привезли новую пачку кофе')},20000);return}
+  toast(CUPS[cups-1]);if(cups>=5)mug.animate([{transform:'rotate(0)'},{transform:'rotate(-8deg)'},{transform:'rotate(7deg)'},{transform:'rotate(0)'}],{duration:400})});
+
+/* robot: eyes follow, blinks */
+var robot=document.getElementById('robot'),pupils=robot.querySelectorAll('.eye i');
+addEventListener('pointermove',function(e){var r=robot.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+35,a=Math.atan2(e.clientY-cy,e.clientX-cx),d=Math.min(4,Math.hypot(e.clientX-cx,e.clientY-cy)/40);
+  pupils.forEach(function(p){p.style.transform='translate('+Math.cos(a)*d+'px,'+Math.sin(a)*d+'px)'})});
+if(!reduce)(function bl(){setTimeout(function(){robot.classList.add('blink');setTimeout(function(){robot.classList.remove('blink');bl()},130)},rnd(2000,5000))})();
+
+/* receipt printer */
+var pr=null,no=41;
+var A={
+  'Сколько стоит?':'Дешевле сотрудника,\nкоторый делает это руками.\nОбычно от 15 000 ₽.\nТочнее — после пары вопросов.',
+  'Как быстро?':'Первая версия: от 3 дней.\nДальше этапами,\nкаждый можно потрогать.',
+  'Ты кто?':'Робот‑секретарь shaze.\nСобран за вечер, не ем,\nне сплю, печатаю чеки.',
+  'Анекдот':'Заказчик: «Сделайте,\nчтобы всё работало само».\nЧерез неделю:\n«А мне теперь что делать?»',
+  'Хочу бота!':'Отличный выбор.\nПишите в Telegram:\n'
+};
+function open(){if(pr){pr.remove();pr=null;return}no++;
+  pr=document.createElement('div');pr.className='printer';
+  pr.innerHTML='<div class="paperwrap"><div class="paper"><div class="hd"><b>shaze</b>ЧЕК № 00'+no+' · '+new Date().toLocaleDateString('ru')+'<br>касса: робот‑секретарь</div><div class="lines"></div></div></div>'+
+    '<div class="pbody"><div class="lbl"><span>SHAZE‑PRINT 3000</span><i id="pled"></i></div><div class="keys"></div></div>';
+  document.body.appendChild(pr);
+  var lines=pr.querySelector('.lines'),keys=pr.querySelector('.keys'),led=pr.querySelector('#pled'),wrap=pr.querySelector('.paperwrap'),busy=false;
+  function printText(q,t,done){busy=true;led.classList.add('busy');keys.querySelectorAll('button').forEach(function(b){b.disabled=true});
+    if(q){var qd=document.createElement('div');qd.className='q';qd.textContent=q;lines.appendChild(qd)}
+    var a=document.createElement('div');a.className='a';lines.appendChild(a);var k=0;
+    var t2=setInterval(function(){a.textContent=t.slice(0,++k);wrap.scrollTop=wrap.scrollHeight;if(k>=t.length){clearInterval(t2);busy=false;led.classList.remove('busy');keys.querySelectorAll('button').forEach(function(b){b.disabled=false});done&&done()}},reduce?0:18)}
+  Object.keys(A).forEach(function(q){var b=document.createElement('button');b.type='button';b.textContent=q;b.onclick=function(){if(busy)return;
+    printText(q,A[q],function(){if(q==='Хочу бота!'){var l=document.createElement('div');l.className='a';l.innerHTML='<a href="https://t.me/shaze6664" target="_blank" rel="noopener">→ t.me/shaze6664</a>';lines.appendChild(l)}
+      var sp=document.createElement('div');sp.className='sep';lines.appendChild(sp)})};keys.appendChild(b)});
+  var tear=document.createElement('button');tear.type='button';tear.className='red';tear.textContent='оторвать чек ✂';
+  tear.onclick=function(){if(busy)return;var p=pr.querySelector('.paper');p.classList.add('tear');setTimeout(function(){if(pr){pr.remove();pr=null}},550)};keys.appendChild(tear);
+  printText('','Добрый день!\nВыберите кнопку ниже,\nя распечатаю ответ.\n')}
+robot.addEventListener('click',open);
+})();
+</script>
